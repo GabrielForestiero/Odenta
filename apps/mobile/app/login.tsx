@@ -15,9 +15,9 @@ export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -28,12 +28,18 @@ export default function LoginScreen() {
     try {
       setLoading(true);
 
+      // 👇 backend devuelve { token, user }
       const data = await loginUser({ email, password });
-      await login(data.token);
+
+      // 👇 pasamos TODO, no solo el token
+      await login(data.token, data.user);
 
       router.replace("/");
     } catch (error: any) {
-      Alert.alert("Error", error.message);
+      Alert.alert(
+        "Error",
+        error?.message || "Error al iniciar sesión"
+      );
     } finally {
       setLoading(false);
     }
@@ -47,6 +53,7 @@ export default function LoginScreen() {
         style={styles.input}
         placeholder="Email"
         autoCapitalize="none"
+        keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
@@ -59,22 +66,35 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={loading}
+      >
         <Text style={styles.buttonText}>
           {loading ? "Ingresando..." : "Ingresar"}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push("/register")}>
-        <Text style={styles.link}>¿No tenés cuenta? Registrate</Text>
+        <Text style={styles.link}>
+          ¿No tenés cuenta? Registrate
+        </Text>
       </TouchableOpacity>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
-  title: { fontSize: 24, textAlign: "center", marginBottom: 30 },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 20
+  },
+  title: {
+    fontSize: 24,
+    textAlign: "center",
+    marginBottom: 30
+  },
   input: {
     borderWidth: 1,
     padding: 12,
@@ -87,6 +107,13 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: "center"
   },
-  buttonText: { color: "#fff", fontWeight: "bold" },
-  link: { textAlign: "center", marginTop: 20, color: "#007AFF" }
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold"
+  },
+  link: {
+    textAlign: "center",
+    marginTop: 20,
+    color: "#007AFF"
+  }
 });

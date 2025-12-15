@@ -1,0 +1,7 @@
+// src/types/User.ts
+export interface User {
+  id: string;
+  nombre: string;
+  email: string;
+  rol: "admin" | "profesional";
+}

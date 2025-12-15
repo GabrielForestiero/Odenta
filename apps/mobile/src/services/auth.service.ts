@@ -1,6 +1,11 @@
-// src/services/auth.service.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiPost } from "./api";
+import { User } from "../types/User";
+
+interface LoginResponse {
+  token: string;
+  user: User;
+}
 
 export function registerUser(data: {
   nombre: string;
@@ -14,8 +19,8 @@ export async function loginUser(data: {
   email: string;
   password: string;
 }) {
-  const response = await apiPost<{ token: string }>("/auth/login", data);
-  await AsyncStorage.setItem("token", response.token);
+  const response = await apiPost<LoginResponse>("/auth/login", data);
+
   return response;
 }
 
