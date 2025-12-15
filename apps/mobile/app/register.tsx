@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   View,
   Text,
@@ -7,25 +6,37 @@ import {
   Alert,
   StyleSheet
 } from "react-native";
-import { registerUser } from "../src/services/auth.service";
+import { useState } from "react";
+import { useRouter } from "expo-router";
+import {
+  registerUser,
+  loginUser
+} from "../src/services/auth.service";
+import { useAuth } from "../src/context/AuthContext";
 
 export default function RegisterScreen() {
+  const router = useRouter();
+  const { login } = useAuth();
+
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
+    if (!nombre || !email || !password) {
+      Alert.alert("Error", "Completá todos los campos");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const user = await registerUser({
-        nombre,
-        email,
-        password
-      });
+      await registerUser({ nombre, email, password });
+      const data = await loginUser({ email, password });
+      await login(data.token);
 
-      Alert.alert("Usuario creado", `Bienvenido ${user.nombre}`);
+      router.replace("/");
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {
@@ -39,7 +50,6 @@ export default function RegisterScreen() {
 
       <TextInput
         placeholder="Nombre"
-        placeholderTextColor="#999"
         value={nombre}
         onChangeText={setNombre}
         style={styles.input}
@@ -47,51 +57,34 @@ export default function RegisterScreen() {
 
       <TextInput
         placeholder="Email"
-        placeholderTextColor="#999"
+        autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
         style={styles.input}
       />
 
       <TextInput
         placeholder="Contraseña"
-        placeholderTextColor="#999"
+        secureTextEntry
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
         style={styles.input}
       />
 
       <Button
         title={loading ? "Creando..." : "Registrarse"}
         onPress={handleRegister}
-        disabled={loading}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#fff", // 🔥 clave
-    gap: 12
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000"
-  },
+  container: { flex: 1, padding: 20, gap: 12 },
+  title: { fontSize: 24, fontWeight: "bold" },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
     borderRadius: 6,
-    padding: 12,
-    fontSize: 16,
-    color: "#000", // 🔥 clave
-    backgroundColor: "#fff"
+    padding: 12
   }
 });

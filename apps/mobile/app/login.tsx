@@ -1,9 +1,19 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert
+} from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
+import { loginUser } from "../src/services/auth.service";
+import { useAuth } from "../src/context/AuthContext";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,32 +28,12 @@ export default function LoginScreen() {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:3000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email,
-          password
-        })
-      });
+      const data = await loginUser({ email, password });
+      await login(data.token);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        Alert.alert("Error", data.message || "Credenciales incorrectas");
-        return;
-      }
-
-      // 👉 más adelante guardamos el token
-      Alert.alert("Éxito", "Login correcto");
-
-      // 👉 redirigir
       router.replace("/");
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "No se pudo conectar con el servidor");
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
     } finally {
       setLoading(false);
     }
@@ -56,9 +46,7 @@ export default function LoginScreen() {
       <TextInput
         style={styles.input}
         placeholder="Email"
-        placeholderTextColor="#666"
         autoCapitalize="none"
-        keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
@@ -66,17 +54,12 @@ export default function LoginScreen() {
       <TextInput
         style={styles.input}
         placeholder="Contraseña"
-        placeholderTextColor="#666"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleLogin}
-        disabled={loading}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>
           {loading ? "Ingresando..." : "Ingresar"}
         </Text>
@@ -90,23 +73,10 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#fff" // ✅ FIX
-  },
-  title: {
-    fontSize: 24,
-    textAlign: "center",
-    marginBottom: 30,
-    color: "#000" // ✅ FIX
-  },
+  container: { flex: 1, justifyContent: "center", padding: 20 },
+  title: { fontSize: 24, textAlign: "center", marginBottom: 30 },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    backgroundColor: "#fff", // ✅ FIX
-    color: "#000",           // ✅ FIX
     padding: 12,
     marginBottom: 15,
     borderRadius: 6
@@ -115,16 +85,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#007AFF",
     padding: 15,
     borderRadius: 6,
-    alignItems: "center",
-    marginBottom: 15
+    alignItems: "center"
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold"
-  },
-  link: {
-    textAlign: "center",
-    color: "#007AFF"
-  }
+  buttonText: { color: "#fff", fontWeight: "bold" },
+  link: { textAlign: "center", marginTop: 20, color: "#007AFF" }
 });

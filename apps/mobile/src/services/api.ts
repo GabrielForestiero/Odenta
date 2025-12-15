@@ -1,4 +1,17 @@
+// src/services/api.ts
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const API_URL = "http://localhost:3000/api";
+
+
+async function getHeaders() {
+  const token = await AsyncStorage.getItem("token");
+
+  return {
+    "Content-Type": "application/json",
+    ...(token && { Authorization: `Bearer ${token}` })
+  };
+}
 
 export async function apiPost<T>(
   endpoint: string,
@@ -6,9 +19,7 @@ export async function apiPost<T>(
 ): Promise<T> {
   const response = await fetch(`${API_URL}${endpoint}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: await getHeaders(),
     body: JSON.stringify(body)
   });
 
